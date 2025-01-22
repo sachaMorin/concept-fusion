@@ -25,6 +25,7 @@ from PIL import Image
 from segment_anything import SamAutomaticMaskGenerator, SamPredictor, sam_model_registry
 from tqdm import tqdm, trange
 from typing_extensions import Literal
+from get_rgbd_dataset import get_rgbd_dataset
 
 
 @dataclass
@@ -51,7 +52,8 @@ class ProgramArgs:
     mode: Literal["incremental", "batch"] = "incremental"
 
     # Path to the data config (.yaml) file
-    dataconfig_path: str = "dataconfigs/icl.yaml"
+    dataset_name: str = "Replica"
+
     # Path to the dataset directory
     data_dir: Union[str, Path] = Path.home() / "data" / "icl"
     # Sequence from the dataset to load
@@ -74,18 +76,18 @@ class ProgramArgs:
     save_dir: str = "saved-feat"
 
 
-def get_dataset(dataconfig_path, basedir, sequence, **kwargs):
-    config_dict = load_dataset_config(dataconfig_path)
-    if config_dict["dataset_name"].lower() in ["icl"]:
-        return ICLDataset(config_dict, basedir, sequence, **kwargs)
-    elif config_dict["dataset_name"].lower() in ["replica"]:
-        return ReplicaDataset(config_dict, basedir, sequence, **kwargs)
-    elif config_dict["dataset_name"].lower() in ["azure", "azurekinect"]:
-        return AzureKinectDataset(config_dict, basedir, sequence, **kwargs)
-    elif config_dict["dataset_name"].lower() in ["scannet"]:
-        return ScannetDataset(config_dict, basedir, sequence, **kwargs)
-    else:
-        raise ValueError(f"Unknown dataset name {config_dict['dataset_name']}")
+# def get_dataset(dataconfig_path, basedir, sequence, **kwargs):
+#     config_dict = load_dataset_config(dataconfig_path)
+#     if config_dict["dataset_name"].lower() in ["icl"]:
+#         return ICLDataset(config_dict, basedir, sequence, **kwargs)
+#     elif config_dict["dataset_name"].lower() in ["replica"]:
+#         return ReplicaDataset(config_dict, basedir, sequence, **kwargs)
+#     elif config_dict["dataset_name"].lower() in ["azure", "azurekinect"]:
+#         return AzureKinectDataset(config_dict, basedir, sequence, **kwargs)
+#     elif config_dict["dataset_name"].lower() in ["scannet"]:
+#         return ScannetDataset(config_dict, basedir, sequence, **kwargs)
+#     else:
+#         raise ValueError(f"Unknown dataset name {config_dict['dataset_name']}")
 
 
 def main():
@@ -95,8 +97,8 @@ def main():
     args = tyro.cli(ProgramArgs)
     
     # dataconfig = load_dataset_config(args.dataconfig_path)
-    dataset = get_dataset(
-        dataconfig_path=args.dataconfig_path,
+    dataset = get_rgbd_dataset(
+        dataset_name=args.dataset_name,
         basedir=args.data_dir,
         sequence=args.sequence,
         start=args.start_idx,
