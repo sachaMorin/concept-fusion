@@ -24,6 +24,7 @@ from gradslam.structures.rgbdimages import RGBDImages
 from models_common import get_model
 from tqdm import trange
 from typing_extensions import Literal
+from get_rgbd_dataset import get_rgbd_dataset
 
 
 @dataclass
@@ -46,9 +47,10 @@ class ProgramArgs:
 
     # Dataset args
     # Path to config file
-    dataconfig_path: Union[str, Path] = Path("dataconfigs") / "icl.yaml"
+    # dataconfig_path: Union[str, Path] = Path("dataconfigs") / "icl.yaml"
+    dataset_name: str = "Replica"
     # Path to base dir of dataset
-    dataset_path: Union[str, Path] = Path("~/data/icl").expanduser()
+    data_dir: Union[str, Path] = Path("~/data/icl").expanduser()
     # trajectory to sample from
     sequence: Union[str, List[str]] = "living_room_traj1_frei_png"
     # length of sequence to sample (determined by start, end, and stride)
@@ -140,18 +142,29 @@ def extract_and_save_features(args):
 
 def run_fusion_and_save_map(args):
     # Get dataset
-    dataset = get_dataset(
-        dataconfig_path=args.dataconfig_path,
-        basedir=args.dataset_path,
+    # dataset = get_dataset(
+    #     dataconfig_path=args.dataconfig_path,
+    #     basedir=args.dataset_path,
+    #     sequence=args.sequence,
+    #     desired_height=args.image_height,
+    #     desired_width=args.image_width,
+    #     start=args.frame_start,
+    #     end=args.frame_end,
+    #     stride=args.stride,
+    #     load_embeddings=False,  # We will not read in embeddings; we will compute them
+    #     odomfile=args.odomfile,
+    # )
+    dataset = get_rgbd_dataset(
+        dataset_name=args.dataset_name,
+        basedir=args.data_dir,
         sequence=args.sequence,
-        desired_height=args.image_height,
-        desired_width=args.image_width,
         start=args.frame_start,
         end=args.frame_end,
         stride=args.stride,
-        load_embeddings=False,  # We will not read in embeddings; we will compute them
-        odomfile=args.odomfile,
+        desired_height=args.image_height,
+        desired_width=args.image_width,
     )
+
 
     slam = PointFusion(odom="gt", dsratio=1, device=args.device, use_embeddings=True)
 
@@ -163,7 +176,15 @@ def run_fusion_and_save_map(args):
     print("Running PointFusion (incremental mode)...")
 
     for idx in trange(len(dataset)):
-        _color, _depth, intrinsics, _pose, *_ = dataset[idx]
+        obs = dataset[idx]
+        _color = torch.from_numpy(obs["rgb"]).cuda()
+        _depth = torch.from_numpy(obs["depth"]).unsqueeze(-1).cuda()
+        intrinsics = torch.eye(4).double().cuda()
+        intrinsics[:3, :3] = torch.from_numpy(obs["intrinsics"]).double().cuda()
+        _pose = torch.from_numpy(obs["camera_pose"]).double().cuda()
+
+        # _color, _depth, intrinsics, _pose, *_ = dataset[idx]
+
         _loadfile = os.path.join(
             args.feat_dir,
             os.path.splitext(os.path.basename(dataset.color_paths[idx]))[0] + ".pt",
