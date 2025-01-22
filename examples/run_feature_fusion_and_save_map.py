@@ -177,11 +177,11 @@ def run_fusion_and_save_map(args):
 
     for idx in trange(len(dataset)):
         obs = dataset[idx]
-        _color = torch.from_numpy(obs["rgb"]).cuda()
-        _depth = torch.from_numpy(obs["depth"]).unsqueeze(-1).cuda()
-        intrinsics = torch.eye(4).double().cuda()
-        intrinsics[:3, :3] = torch.from_numpy(obs["intrinsics"]).double().cuda()
-        _pose = torch.from_numpy(obs["camera_pose"]).double().cuda()
+        _color = torch.from_numpy(obs["rgb"]).float().cuda()
+        _depth = torch.from_numpy(obs["depth"]).unsqueeze(-1).float().cuda()
+        intrinsics = torch.eye(4).float().cuda()
+        intrinsics[:3, :3] = torch.from_numpy(obs["intrinsics"]).float().cuda()
+        _pose = torch.from_numpy(obs["camera_pose"]).float().cuda()
 
         # _color, _depth, intrinsics, _pose, *_ = dataset[idx]
 
