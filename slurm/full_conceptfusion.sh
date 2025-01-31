@@ -6,7 +6,7 @@
 #SBATCH --cpus-per-task=4
 #SBATCH --gres=gpu:1
 #SBATCH --mail-type=ARRAY_TASKS,FAIL,TIME_LIMIT
-#SBATCH --mem=16G
+#SBATCH --mem=48G
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --time=1-00:00:00
@@ -20,7 +20,7 @@ SEQUENCE=$3
 
 FT_DIR=/tmp/saved-feat # Where to save features
 MAP_DIR=/tmp/saved-map # Where to save maps
-FINAL_DIR=$SCRATCH/openlex-results/concept-fusion/$DATASET_NAME/$SEQUENCE # Where to save final results
+FINAL_DIR=$SCRATCH/openlex/predictions/concept-fusion/$DATASET_NAME/$SEQUENCE # Where to save final results
 
 SAM_CHECKPOINT_PATH=$HOME/concept-fusion/checkpoints/sam_vit_h_4b8939.pth
 
